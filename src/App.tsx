@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import { Board } from './features/board/Board';
 import { Statistics } from './features/stats/Statistics';

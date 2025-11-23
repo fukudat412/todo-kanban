@@ -21,14 +21,20 @@ import { Column } from '../../components/Column';
 import { TaskCard } from '../../components/TaskCard';
 import { Modal } from '../../components/Modal';
 import { QuickAddBar } from '../../components/QuickAddBar';
-import { Plus, Mic, MicOff } from 'lucide-react';
+import { SettingsModal } from '../../components/SettingsModal';
+import { useSettingsStore } from '../../hooks/useSettingsStore';
+import { fetchGitHubIssues } from '../../services/github';
+import { Plus, Mic, MicOff, Settings, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
 export const Board: React.FC = () => {
     const { tasks, addTask, moveTask, deleteTask, clearColumn } = useTaskStore();
+    const { settings } = useSettingsStore();
     const [activeId, setActiveId] = useState<string | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     // Form state
@@ -52,11 +58,42 @@ export const Board: React.FC = () => {
     }, [transcript]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
+
+    const handleImportGitHub = async () => {
+        if (!settings.githubToken || !settings.githubOwner || !settings.githubRepo) {
+            setIsSettingsOpen(true);
+            return;
+        }
+
+        setIsImporting(true);
+        try {
+            const issues = await fetchGitHubIssues(settings.githubToken, settings.githubOwner, settings.githubRepo);
+
+            let count = 0;
+            for (const issue of issues) {
+                // Check if task already exists (simple check by title for now, ideally store issue ID)
+                const exists = tasks.some(t => t.title === issue.title);
+                if (!exists) {
+                    await addTask(issue.title, issue.body || `Imported from ${issue.html_url}`);
+                    count++;
+                }
+            }
+            alert(`Imported ${count} issues from GitHub!`);
+        } catch (error) {
+            alert(`Failed to import issues: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsImporting(false);
+        }
+    };
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -134,10 +171,30 @@ export const Board: React.FC = () => {
         <div className="board-container">
             <QuickAddBar />
             <div className="board-actions">
-                <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
-                    <Plus size={20} />
-                    Add Task
-                </button>
+                <div className="action-group">
+                    <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
+                        <Plus size={20} />
+                        Add Task
+                    </button>
+                </div>
+                <div className="action-group">
+                    <button
+                        className="btn btn-ghost"
+                        onClick={handleImportGitHub}
+                        disabled={isImporting}
+                        title="Import GitHub Issues"
+                    >
+                        {isImporting ? <Loader2 size={20} className="spin" /> : <Download size={20} />}
+                        Import Issues
+                    </button>
+                    <button
+                        className="btn btn-ghost"
+                        onClick={() => setIsSettingsOpen(true)}
+                        title="Settings"
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
             </div>
 
             <DndContext
@@ -280,6 +337,11 @@ export const Board: React.FC = () => {
                 </Modal>
             )}
 
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+            />
+
             <style>{`
         .board-container {
           flex: 1;
@@ -289,6 +351,21 @@ export const Board: React.FC = () => {
         }
         .board-actions {
           margin-bottom: 1rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .action-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
         .board-columns {
           display: flex;

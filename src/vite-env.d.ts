@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 interface SpeechRecognitionErrorEvent extends Event {
     error: string;
     message: string;

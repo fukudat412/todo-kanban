@@ -30,3 +30,10 @@ export const COLUMNS: Column[] = [
   { id: 'done', title: 'Done', color: 'var(--column-done)' },
   { id: 'cancel', title: 'Cancel', color: 'var(--column-cancel)' },
 ];
+
+export interface AppSettings {
+  id: string; // 'default'
+  githubToken?: string;
+  githubOwner?: string;
+  githubRepo?: string;
+}

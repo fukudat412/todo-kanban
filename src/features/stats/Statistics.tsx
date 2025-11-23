@@ -63,7 +63,7 @@ export const Statistics: React.FC = () => {
                                 cursor={{ fill: 'var(--bg-secondary)' }}
                             />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                                {chartData.map((entry, index) => (
+                                {chartData.map((_, index) => (
                                     <Cell key={`cell-${index}`} fill="var(--accent-primary)" />
                                 ))}
                             </Bar>

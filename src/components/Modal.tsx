@@ -1,30 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    title: string;
-    children: React.ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
 }
 
 export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-    if (!isOpen) return null;
+  if (!isOpen) return null;
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h2 className="modal-title">{title}</h2>
-                    <button onClick={onClose} className="close-btn">
-                        <X size={20} />
-                    </button>
-                </div>
-                <div className="modal-body">
-                    {children}
-                </div>
-            </div>
-            <style>{`
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">{title}</h2>
+          <button onClick={onClose} className="close-btn">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+      <style>{`
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -75,6 +75,6 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           padding: 1.5rem;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
